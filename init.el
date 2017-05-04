@@ -1,132 +1,101 @@
-;;;;
-;; Packages
-;;;;
-
-;; Define package repositories
 (require 'package)
-(add-to-list 'package-archives
-             '("marmalade" . "http://marmalade-repo.org/packages/") t)
-(add-to-list 'package-archives
-             '("tromey" . "http://tromey.com/elpa/") t)
-(add-to-list 'package-archives
-             '("melpa" . "http://melpa.milkbox.net/packages/") t)
 
-;; (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-;;                          ("marmalade" . "http://marmalade-repo.org/packages/")
-;;                          ("melpa" . "http://melpa-stable.milkbox.net/packages/")))
-
-
-;; Load and activate emacs packages. Do this first so that the
-;; packages are loaded before you start trying to modify them.
-;; This also sets the load path.
+(add-to-list 'package-archives
+                    '("melpa" . "http://melpa.org/packages/") t)
+(add-to-list 'package-archives
+             '("marmalade" . "http://marmalade-repo.org/packages/"))
 (package-initialize)
-
-;; Download the ELPA archive description if needed.
-;; This informs Emacs about the latest versions of all packages, and
-;; makes them available for download.
 (when (not package-archive-contents)
-  (package-refresh-contents))
+    (package-refresh-contents))
 
-;; The packages you want installed. You can also install these
-;; manually with M-x package-install
-;; Add in your own as you wish:
-(defvar my-packages
-  '(;; makes handling lisp expressions much, much easier
-    ;; Cheatsheet: http://www.emacswiki.org/emacs/PareditCheatsheet
-    paredit
+(defvar myPackages
+  '(projectile
+    better-defaults
+    expand-region
+    neotree
+    elpy
+    jedi
+    python-mode
+    ein
+    exec-path-from-shell
+    flycheck ;; add the flycheck package
+    material-theme))
 
-    ;; key bindings and code colorization for Clojure
-    ;; https://github.com/clojure-emacs/clojure-mode
-    clojure-mode
+(mapc #'(lambda (package)
+              (unless (package-installed-p package)
+                      (package-install package)))
+            myPackages)
 
-    ;; extra syntax highlighting for clojure
-    clojure-mode-extra-font-locking
+;; BASIC CUSTOMIZATION
+;; --------------------------------------
 
-    ;; integration with a Clojure REPL
-    ;; https://github.com/clojure-emacs/cider
-    cider
-
-    ;; allow ido usage in as many contexts as possible. see
-    ;; customizations/navigation.el line 23 for a description
-    ;; of ido
-    ido-ubiquitous
-
-    ;; Enhances M-x to allow easier execution of commands. Provides
-    ;; a filterable list of possible commands in the minibuffer
-    ;; http://www.emacswiki.org/emacs/Smex
-    smex
-
-    ;; project navigation
-    projectile
-
-    ;; colorful parenthesis matching
-    rainbow-delimiters
-
-    ;; edit html tags like sexps
-    tagedit
-
-    ;; git integration
-    magit))
-
-;; On OS X, an Emacs instance started from the graphical user
-;; interface will have a different environment than a shell in a
-;; terminal window, because OS X does not run a shell during the
-;; login. Obviously this will lead to unexpected results when
-;; calling external utilities like make from Emacs.
-;; This library works around this problem by copying important
-;; environment variables from the user's shell.
-;; https://github.com/purcell/exec-path-from-shell
-(if (eq system-type 'darwin)
-    (add-to-list 'my-packages 'exec-path-from-shell))
-
-(dolist (p my-packages)
-  (when (not (package-installed-p p))
-    (package-install p)))
+(setq inhibit-startup-message t) ;; hide the startup message
+(load-theme 'material t) ;; load material theme
+(global-linum-mode t) ;; enable line numbers globally
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (material-theme yaml-mode typed-clojure-mode tagedit smex rainbow-identifiers rainbow-delimiters projectile paredit magit ido-ubiquitous exec-path-from-shell elpy clojure-mode-extra-font-locking better-defaults 2048-game))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
 
 
-;; Place downloaded elisp files in ~/.emacs.d/vendor. You'll then be able
-;; to load them.
-;;
-;; For example, if you download yaml-mode.el to ~/.emacs.d/vendor,
-;; then you can add the following code to this file:
-;;
-;; (require 'yaml-mode)
-;; (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
-;; 
-;; Adding this code will make Emacs enter yaml mode whenever you open
-;; a .yml file
-(add-to-list 'load-path "~/.emacs.d/vendor")
+(elpy-enable)
+(setq python-shell-interpreter "/Users/bdashtba/anaconda3/bin/python")
+(load "~/.emacs.d/elpa/python-mode-20170429.55/python-mode.el")
+(when (require 'flycheck nil t)
+  (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+  (add-hook 'elpy-mode-hook 'flycheck-mode))
+(setq-default message-log-max 2)
 
 
-;;;;
-;; Customization
-;;;;
+(defun kill-other-buffers ()
+      "Kill all other buffers."
+      (interactive)
+      (mapc 'kill-buffer (delq (current-buffer) (buffer-list))))
+(add-hook 'python-mode-hook 'jedi:setup)
+(setq jedi:complete-on-dot t)
 
-;; Add a directory to our load path so that when you `load` things
-;; below, Emacs knows where to look for the corresponding file.
-(add-to-list 'load-path "~/.emacs.d/customizations")
+;; Append Path
+(exec-path-from-shell-initialize)
 
-;; Sets up exec-path-from-shell so that Emacs will use the correct
-;; environment variables
-(load "shell-integration.el")
 
-;; These customizations make it easier for you to navigate files,
-;; switch buffers, and choose options from the minibuffer.
-(load "navigation.el")
+;; Jedi
+(require 'jedi)
+(add-to-list 'ac-sources 'ac-source-jedi-direct)
+(add-hook 'pythin-mode-hook 'jedi:setup)
 
-;; These customizations change the way emacs looks and disable/enable
-;; some user interface elements
-(load "ui.el")
+;; Ipython Jupyter
+(require 'ein)
 
-;; These customizations make editing a bit nicer.
-(load "editing.el")
 
-;; Hard-to-categorize customizations
-(load "misc.el")
+;;expand region
+(require 'expand-region)
+(global-set-key (kbd "C-=") 'er/expand-region)
 
-;; For editing lisps
-(load "elisp-editing.el")
+;;NeoTree
+(add-to-list 'load-path "/some/path/neotree")
+(require 'neotree)
+(global-set-key [f2] 'neotree-toggle)
 
-;; Langauage-specific
-(load "setup-clojure.el")
-(load "setup-js.el")
+;; initial window
+(setq initial-frame-alist
+      '(
+        (width . 102) ; character
+        (height . 70) ; lines
+        ))
+
+;; default/sebsequent window
+(setq default-frame-alist
+      '(
+        (width . 100) ; character
+        (height . 70) ; lines
+        ))
