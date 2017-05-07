@@ -10,8 +10,12 @@
 
 (defvar myPackages
   '(projectile
+    ace-jump-mode
+    git
+    magit
     better-defaults
     expand-region
+    ace-window
     neotree
     elpy
     jedi
@@ -19,7 +23,9 @@
     ein
     exec-path-from-shell
     flycheck ;; add the flycheck package
-    material-theme))
+    js2-mode
+    material-theme
+    hackernews))
 
 (mapc #'(lambda (package)
               (unless (package-installed-p package)
@@ -99,3 +105,29 @@
         (width . 100) ; character
         (height . 70) ; lines
         ))
+
+;; change the mapping to command
+(when (eq system-type 'darwin)
+  (setq mac-command-modifier 'meta)
+  (setq mac-option-modifier nil))
+
+
+;; Ace window
+(require 'ace-window)
+(global-set-key (kbd "M-p") 'ace-window)
+
+
+;; Ace Jump Mode
+(require 'ace-jump-mode)
+(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+
+;; Javascript
+(require 'js2-mode)
+
+;; Git
+(require 'git)
+(require 'magit)
+(global-set-key (kbd "C-x g") 'magit-status)
+
+;; HackerNews
+(require 'hackernews)
